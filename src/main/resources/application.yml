@@ -1,0 +1,76 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# application.yml — configurações da aplicação
+#
+# EXAME — Spring Boot Externalized Configuration:
+#   Ordem de precedência (maior → menor):
+#   1. Command-line arguments (--server.port=9090)
+#   2. SPRING_APPLICATION_JSON (env var com JSON)
+#   3. OS environment variables
+#   4. application-{profile}.yml  ← profile-specific
+#   5. application.yml            ← este arquivo
+#   6. @PropertySource
+#   7. Default values
+#
+# EXAME — Profiles:
+#   spring.profiles.active define qual profile está ativo.
+#   Propriedades de application-dev.yml sobrescrevem application.yml.
+# ─────────────────────────────────────────────────────────────────────────────
+
+spring:
+  application:
+    name: fintech-api
+
+  profiles:
+    active: dev  # Ativa o profile "dev" por padrão
+
+  # JPA / Hibernate
+  jpa:
+    # EXAME — ddl-auto values:
+    #   none        → não faz nada (produção)
+    #   validate    → valida schema mas não altera
+    #   update      → atualiza schema sem apagar dados
+    #   create      → cria schema ao iniciar (apaga dados existentes)
+    #   create-drop → cria ao iniciar e apaga ao encerrar (testes)
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # H2 Console (desenvolvimento)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # DataSource H2 em memória
+  datasource:
+    url: jdbc:h2:mem:fintechdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+# Servidor
+server:
+  port: 8080
+  error:
+    include-message: always
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Info do Actuator
+info:
+  app:
+    name: ${spring.application.name}
+    description: Fintech API — Spring Study Project
+    version: 0.0.1-SNAPSHOT

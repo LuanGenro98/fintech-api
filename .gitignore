@@ -1,0 +1,40 @@
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### Maven ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+# .mvn/wrapper/maven-wrapper.jar (descomente se não quiser o wrapper no git)
+
+### Java ###
+*.class
+*.log
+*.mtj.tmp/
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+### Spring Boot ###
+HELP.md
+.sts4-cache/
+
+### Sistema Operacional (Windows/Mac) ###
+.DS_Store
+Thumbs.db
