@@ -1,0 +1,22 @@
+# application-test.yml
+# Configurações específicas para o profile de testes.
+#
+# EXAME — Como o Spring resolve properties em testes:
+#  1. application-test.yml sobrescreve application.yml
+#  2. @ActiveProfiles("test") ativa este arquivo
+#  3. O DataInitializerConfig tem @Profile("dev"), então NÃO executa nos testes
+#     — evitamos dados "sujos" de desenvolvimento interferindo nos testes
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop   # Recria o schema a cada execução de testes
+    show-sql: false           # Reduz ruído no output dos testes
+  h2:
+    console:
+      enabled: false          # Console desnecessário em testes
+
+logging:
+  level:
+    com.fintech: DEBUG        # Logs detalhados da nossa aplicação
+    org.springframework.transaction: DEBUG  # Ver o ciclo de transações

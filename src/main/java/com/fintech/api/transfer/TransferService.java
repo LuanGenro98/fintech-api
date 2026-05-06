@@ -3,6 +3,7 @@ package com.fintech.api.transfer;
 import com.fintech.api.account.Account;
 import com.fintech.api.account.AccountRepository;
 import com.fintech.api.account.AccountNotFoundException;
+import com.fintech.api.shared.aop.Idempotent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,6 +70,7 @@ public class TransferService {
      *
      * EXAME: Isso é o "A" do ACID — Atomicity.
      */
+    @Idempotent(keyArgumentIndex = 0)
     @Transactional
     public Transfer execute(String idempotencyKey, String sourceNumber,
                             String destinationNumber, BigDecimal amount) {
