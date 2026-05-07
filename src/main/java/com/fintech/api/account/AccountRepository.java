@@ -1,6 +1,7 @@
 package com.fintech.api.account;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,8 +20,18 @@ import java.util.Optional;
  *  - @Lock: aplica LockModeType na query — usado para Pessimistic Locking.
  *
  * EXAME: Diferença entre PESSIMISTIC_WRITE (SELECT FOR UPDATE) e OPTIMISTIC (@Version).
+ *
+ * EXAME — JpaSpecificationExecutor:
+ *  Adiciona suporte a queries dinâmicas via Specification (Criteria API).
+ *  Métodos adicionados:
+ *   - findAll(Specification<T>)
+ *   - findAll(Specification<T>, Pageable)
+ *   - findAll(Specification<T>, Sort)
+ *   - count(Specification<T>)
+ *   - exists(Specification<T>)
  */
-public interface AccountRepository extends JpaRepository<Account, Long> {
+public interface AccountRepository extends JpaRepository<Account, Long>,
+                                           JpaSpecificationExecutor<Account> {
 
     // Derived Query Method — Spring gera o SQL pelo nome do método
     Optional<Account> findByAccountNumber(String accountNumber);

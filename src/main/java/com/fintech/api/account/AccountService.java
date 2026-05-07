@@ -1,5 +1,8 @@
 package com.fintech.api.account;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,9 +30,22 @@ import java.util.List;
  *  NOT_SUPPORTED → sempre executa sem transação
  *  NEVER        → lança exceção se existir transação ativa
  *  MANDATORY    → exige transação ativa, senão lança exceção
- */
+ *
+ *  * EXAME — Paginação com Spring Data:
+ *  *  Pageable encapsula: página, tamanho e ordenação.
+ *  *  Page<T> retorna: conteúdo, total de elementos, total de páginas,
+ *  *  página atual, se é primeira/última página, etc.
+ *  *
+ *  *  O cliente controla via query params:
+ *  *  GET /accounts?page=0&size=10&sort=ownerName,asc
+ *  *
+ *  * EXAME — Specification.where():
+ *  *  Ponto de entrada seguro para encadeamento.
+ *  *  Specification.where(null) retorna Specification que não adiciona WHERE.
+ *  *  Depois disso, .and() e .or() combinam os predicados.
+ *  */
 @Service
-@Transactional(readOnly = true)  // padrão read-only para todos os métodos
+@Transactional(readOnly = true)
 public class AccountService {
 
     private final AccountRepository accountRepository;
@@ -38,6 +54,20 @@ public class AccountService {
     // @Autowired é opcional quando há apenas um construtor (Spring 4.3+)
     public AccountService(AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
+    }
+
+    /**
+     * Busca com filtros opcionais e paginação.
+     * Qualquer combinação de filtros funciona — inclusive nenhum (retorna tudo paginado).
+     */
+    public Page<Account> search(String ownerName, BigDecimal minBalance,
+                                BigDecimal maxBalance, Pageable pageable) {
+        Specification<Account> spec = Specification
+                .where(AccountSpecifications.hasOwnerName(ownerName))
+                .and(AccountSpecifications.hasMinBalance(minBalance))
+                .and(AccountSpecifications.hasMaxBalance(maxBalance));
+
+        return accountRepository.findAll(spec, pageable);
     }
 
     public List<Account> findAll() {
@@ -60,8 +90,6 @@ public class AccountService {
         if (accountRepository.existsByAccountNumber(accountNumber)) {
             throw new DuplicateAccountException(accountNumber);
         }
-        Account account = new Account(ownerName, accountNumber, initialBalance);
-        return accountRepository.save(account);
-        // O JPA faz o INSERT no commit da transação (ao sair do método)
+        return accountRepository.save(new Account(ownerName, accountNumber, initialBalance));
     }
 }
