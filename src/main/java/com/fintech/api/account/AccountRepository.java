@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.persistence.LockModeType;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -29,6 +30,16 @@ import java.util.Optional;
  *   - findAll(Specification<T>, Sort)
  *   - count(Specification<T>)
  *   - exists(Specification<T>)
+ * EXAME — Projections no repositório:
+ *
+ * Interface-based → só muda o tipo de retorno, Spring cuida do resto.
+ * Class-based     → precisa de @Query com constructor expression JPQL.
+ * Dynamic         → tipo genérico <T>, caller decide qual Projection usar.
+ *
+ * EXAME — Dynamic Projection:
+ *  Um único método serve múltiplos tipos de retorno.
+ *  findBy...(Class<T> type) → Spring adapta a query ao tipo solicitado.
+ *  Muito útil quando o mesmo dado é consumido de formas diferentes.
  */
 public interface AccountRepository extends JpaRepository<Account, Long>,
                                            JpaSpecificationExecutor<Account> {
@@ -44,4 +55,37 @@ public interface AccountRepository extends JpaRepository<Account, Long>,
     Optional<Account> findByAccountNumberForUpdate(@Param("accountNumber") String accountNumber);
 
     boolean existsByAccountNumber(String accountNumber);
+
+    // ── Projections ──────────────────────────────────────────────────────────
+
+    /**
+     * TIPO 1 — Interface-based Projection (Closed):
+     * Spring gera: SELECT a.id, a.owner_name, a.account_number FROM accounts
+     * Apenas as colunas dos getters da interface são buscadas.
+     */
+    List<AccountSummary> findAllProjectedBy();
+
+    /**
+     * TIPO 2 — Class-based Projection:
+     * Constructor expression JPQL: NEW FullClassName(campos...)
+     * A ordem dos args DEVE bater com o construtor do record/classe.
+     *
+     * EXAME — JPQL vs SQL nativo:
+     *  JPQL usa nomes de campos Java (ownerName, balance)
+     *  SQL nativo usa nomes de colunas (owner_name, balance)
+     */
+    @Query("SELECT new com.fintech.api.account.AccountBalanceView" +
+           "(a.ownerName, a.balance) FROM Account a")
+    List<AccountBalanceView> findAllBalanceViews();
+
+    /**
+     * TIPO 3 — Dynamic Projection:
+     * O tipo de retorno é genérico — o caller passa a classe desejada.
+     *
+     * Uso:
+     *   repo.findByAccountNumber("ACC-001", AccountSummary.class)   → interface projection
+     *   repo.findByAccountNumber("ACC-001", Account.class)          → entidade completa
+     *   repo.findByAccountNumber("ACC-001", AccountBalanceView.class) → DTO projection
+     */
+    <T> Optional<T> findByAccountNumber(String accountNumber, Class<T> type);
 }
