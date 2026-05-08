@@ -7,8 +7,10 @@ import com.fintech.api.transfer.TransferNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -78,6 +80,25 @@ public class GlobalExceptionHandler {
         problem.setDetail("One or more fields have invalid values");
         problem.setProperty("errors", errors);
         problem.setProperty("timestamp", LocalDateTime.now());
+        return ResponseEntity.badRequest().body(problem);
+    }
+
+    // ── 400 Bad Request — missing required header ──────────────────────────────────
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ProblemDetail> handleMissingRequestHeaderException(MissingRequestHeaderException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Missing required request header");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
+    }
+
+    // ── 400 Bad Request — missing request body ──────────────────────────────────
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ProblemDetail> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "Request body is missing or malformed");
+        problem.setTitle("Malformed Request Body");
         return ResponseEntity.badRequest().body(problem);
     }
 
